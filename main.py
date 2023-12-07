@@ -2,6 +2,7 @@ from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 import os
 import random
+
 '''
 Install the required packages first: 
 Open the Terminal in PyCharm (bottom left). 
@@ -42,6 +43,7 @@ class Cafe(db.Model):
     def to_dict(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
+
 with app.app_context():
     db.create_all()
 
@@ -59,11 +61,13 @@ def random_cafe():
 
     return jsonify(cafe=random_cafe.to_dict())
 
+
 @app.route('/all')
 def get_all():
     cafes = db.session.execute(db.select(Cafe).order_by(Cafe.name)).scalars().all()
     all_cafes = [cafe.to_dict() for cafe in cafes]
     return jsonify(cafes=all_cafes)
+
 
 @app.route('/search')
 def search_cafe():
@@ -74,7 +78,32 @@ def search_cafe():
         return jsonify(cafe=[cafe.to_dict() for cafe in loc_cafe])
     else:
         return jsonify(error={"Not Found": "Sorry, we don't have a cafe at that location."}), 404
+
+
 # HTTP POST - Create Record
+
+
+@app.route('/add', methods=['GET', 'POST'])
+def add_cafe():
+    if request.method == 'POST':
+        new_cafe = Cafe(name=request.form['name'],
+                        map_url=request.form['map_url'],
+                        img_url=request.form['img_url'],
+                        location=request.form['location'],
+                        seats=request.form['seats'],
+                        has_toilet=True if request.form.get('has_toilet') else False,
+                        has_wifi=True if request.form.get('has_wifi') else False,
+                        has_sockets=True if request.form.get('has_sockets') else False,
+                        can_take_calls=True if request.form.get('can_take_calls') else False,
+                        coffee_price=request.form['coffee_price']
+                        )
+        db.session.add(new_cafe)
+        db.session.commit()
+        return jsonify(response={
+            'success': 'Successfully added the new cafe.'
+        })
+    return render_template('add.html')
+
 
 # HTTP PUT/PATCH - Update Record
 
