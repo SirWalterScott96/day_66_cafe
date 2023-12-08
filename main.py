@@ -43,6 +43,8 @@ class Cafe(db.Model):
     def to_dict(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
+    def __repr__(self):
+        return f'Cafe {self.name}'
 
 with app.app_context():
     db.create_all()
@@ -57,9 +59,9 @@ def home():
 @app.route('/random')
 def random_cafe():
     cafes = db.session.execute(db.select(Cafe)).scalars().all()
-    random_cafe = random.choice(cafes)
+    random_cafe_local = random.choice(cafes)
 
-    return jsonify(cafe=random_cafe.to_dict())
+    return jsonify(cafe=random_cafe_local.to_dict())
 
 
 @app.route('/all')
@@ -81,8 +83,6 @@ def search_cafe():
 
 
 # HTTP POST - Create Record
-
-
 @app.route('/add', methods=['GET', 'POST'])
 def add_cafe():
     if request.method == 'POST':
@@ -106,6 +106,20 @@ def add_cafe():
 
 
 # HTTP PUT/PATCH - Update Record
+@app.route('/update-price/<int:cafe_id>')
+def update_price_coffe(cafe_id):
+    try:
+        cafe_to_update = db.get_or_404(Cafe, cafe_id)
+        print(request.args.get('new_price'))
+        cafe_to_update.coffee_price = request.args.get('new_price')
+        db.session.commit()
+        return jsonify(success='Successfully update the price.')
+    except Exception:
+        return jsonify(error={
+            'Not Found': 'Sorry, a cafe with that id was not found in the database'
+        })
+
+
 
 # HTTP DELETE - Delete Record
 
