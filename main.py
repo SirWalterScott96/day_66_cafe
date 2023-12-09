@@ -16,6 +16,8 @@ pip3 install -r requirements.txt
 This will install the packages from requirements.txt for this project.
 '''
 
+API_KEY = 'lapo4kado4ka'
+
 app = Flask(__name__)
 
 # Connect to Database
@@ -122,7 +124,20 @@ def update_price_coffe(cafe_id):
 
 
 # HTTP DELETE - Delete Record
+@app.route('/delete-cafe/<int:cafe_id>')
+def delete_cafe(cafe_id):
+    if request.args.get('api_key') == API_KEY:
+        try:
+            cafe_to_delete = db.get_or_404(Cafe, cafe_id)
+            db.session.delete(cafe_to_delete)
+            db.session.commit()
+            return jsonify(success='Cafe successfully delete from database')
+        except Exception:
+            return jsonify(error={
+                'Not Found': 'Sorry, a cafe with that id was not found in the database'
+            })
 
+    return jsonify(error='Sorry, you should provide an correct API key')
 
 if __name__ == '__main__':
     app.run(debug=True)
